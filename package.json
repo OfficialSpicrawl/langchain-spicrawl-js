@@ -1,0 +1,79 @@
+{
+  "name": "@spicrawl/langchain",
+  "version": "0.1.0",
+  "description": "Spicrawl integration for LangChain.js: a document loader and an agent tool that read web pages as markdown",
+  "author": "Spicrawl",
+  "license": "MIT",
+  "type": "module",
+  "keywords": [
+    "langchain",
+    "spicrawl",
+    "web scraping",
+    "document loader",
+    "agent tool",
+    "markdown",
+    "rag"
+  ],
+  "sideEffects": false,
+  "engines": {
+    "node": ">=20"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/OfficialSpicrawl/langchain-spicrawl-js.git"
+  },
+  "homepage": "https://docs.spicrawl.com",
+  "bugs": {
+    "url": "https://github.com/OfficialSpicrawl/langchain-spicrawl-js/issues"
+  },
+  "scripts": {
+    "build": "tsdown",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src/ && prettier --check src/",
+    "format": "prettier --write src/",
+    "test": "vitest run",
+    "test:int": "vitest run --mode int",
+    "prepublishOnly": "npm run typecheck && npm run test && npm run build"
+  },
+  "dependencies": {
+    "zod": "^3.25.76 || ^4"
+  },
+  "peerDependencies": {
+    "@langchain/core": "^1.0.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@langchain/core": "^1.2.17",
+    "@types/node": "^22.0.0",
+    "eslint": "^10.12.0",
+    "prettier": "^3.9.0",
+    "tsdown": "^0.23.1",
+    "typescript": "~5.9.3",
+    "typescript-eslint": "^8.71.1",
+    "vitest": "^5.0.4"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.cts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist/",
+    "README.md",
+    "LICENSE"
+  ]
+}
