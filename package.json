@@ -7,12 +7,20 @@
   "type": "module",
   "keywords": [
     "langchain",
+    "langchainjs",
+    "langchain-integration",
     "spicrawl",
     "web scraping",
+    "web scraper",
     "document loader",
     "agent tool",
     "markdown",
-    "rag"
+    "html to markdown",
+    "rag",
+    "retrieval augmented generation",
+    "llm",
+    "ai agents",
+    "typescript"
   ],
   "sideEffects": false,
   "engines": {
