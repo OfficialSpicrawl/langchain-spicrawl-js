@@ -1,9 +1,18 @@
-# @spicrawl/langchain
+# @spicrawl/langchain: load web pages into LangChain.js as Markdown
+
+**How do I load web pages into LangChain as Markdown?** Use `SpicrawlLoader` from
+`@spicrawl/langchain`. Give it one URL or an array and call `load()`: you get LangChain `Document`s
+whose `pageContent` is each page as Markdown, with the final URL, the site's HTTP status and the
+credits charged in `metadata`, ready for a text splitter and a vector store. The package also has
+`SpicrawlScrapeTool`, a LangChain tool that lets an agent open a URL and read it. Both call the
+[Spicrawl](https://docs.spicrawl.com) web scraping API with your API key, and `js_render` renders
+pages that need JavaScript first. It ships TypeScript types and needs Node.js 20 or later and
+`@langchain/core` 1.x.
 
 [LangChain.js](https://docs.langchain.com/oss/javascript/langchain/overview) integration for
-[Spicrawl](https://docs.spicrawl.com), a web scraping API that returns any URL as clean markdown,
+[Spicrawl](https://docs.spicrawl.com), a web scraping API that returns a URL as clean markdown,
 optionally rendering JavaScript first. It is the TypeScript twin of the Python package
-[`langchain-spicrawl`](https://pypi.org/project/langchain-spicrawl/).
+[`langchain-spicrawl`](https://github.com/OfficialSpicrawl/langchain-spicrawl).
 
 | Component | Class | Use it to |
 |---|---|---|
@@ -12,11 +21,23 @@ optionally rendering JavaScript first. It is the TypeScript twin of the Python p
 
 ## Installation
 
+The package is not on npm yet, so install it from this repository. The repo has no `prepare` script
+and `dist/` is not committed, so `npm install github:OfficialSpicrawl/langchain-spicrawl-js` would
+install it unbuilt. Clone, build (the build needs Node.js 22), pack, then install the tarball:
+
 ```bash
-npm install @spicrawl/langchain @langchain/core
+git clone https://github.com/OfficialSpicrawl/langchain-spicrawl-js.git
+cd langchain-spicrawl-js
+npm ci && npm run build && npm pack
+
+cd /path/to/your/project
+npm install /path/to/langchain-spicrawl-js/spicrawl-langchain-<version>.tgz @langchain/core
 ```
 
-Requires Node.js 20 or later. Create an API key in the
+Install the tarball, not the folder: a folder install symlinks the clone, whose own `node_modules`
+carries a second copy of `@langchain/core`, and two copies break LangChain's `instanceof` checks.
+
+The package itself runs on Node.js 20 or later. Create an API key in the
 [Spicrawl dashboard](https://app.spicrawl.com/dashboard/keys) and export it. Keys start with
 `spicrawl_live_` (spends credits) or `spicrawl_test_`.
 
@@ -165,6 +186,75 @@ try {
   else throw err;
 }
 ```
+
+## Use cases
+
+- **RAG over web content.** Load an array of URLs with `SpicrawlLoader`, split the documents and put
+  them in any vector store (see [Index pages for RAG](#index-pages-for-rag)). Spicrawl fetches only
+  the URLs you list; it does not crawl a site, split text or embed it, so the URL list (from a
+  sitemap, for example) and the vector store are yours.
+- **Agents that read the web.** Give a LangChain.js agent `SpicrawlScrapeTool` and it can open a URL
+  the user mentions, or one it found, and read the page as Markdown (see [Agent tool](#agent-tool)).
+- **Pages built by JavaScript.** Set `scrapeOptions: { js_render: true }` and, if needed, `wait_for`
+  for a selector to wait for.
+- **Large URL lists.** `lazyLoad()` yields one document at a time, so a long list can be indexed as
+  it loads.
+
+## FAQ
+
+### How do I load a web page into LangChain.js as Markdown?
+
+```typescript
+import { SpicrawlLoader } from "@spicrawl/langchain";
+
+const docs = await new SpicrawlLoader("https://example.com").load();
+console.log(docs[0].pageContent); // the page as Markdown
+```
+
+Set `SPICRAWL_API_KEY` first. Each `Document` carries `source`, `final_url`, `target_status`,
+`credits_charged` and more in `metadata`; see [Metadata](#metadata).
+
+### How do I build a RAG pipeline over a website with LangChain.js?
+
+Collect the URLs, load them with `SpicrawlLoader`, split the documents with a LangChain text
+splitter and add the chunks to a vector store. A complete example is under
+[Index pages for RAG](#index-pages-for-rag).
+
+### Can it load pages that need JavaScript?
+
+Yes. Pass `scrapeOptions: { js_render: true }` to the loader. A plain fetch costs 1 credit and
+JavaScript rendering costs 3. The agent tool lets the model set `js_render` itself when the first
+attempt comes back empty.
+
+### Does it crawl a whole website?
+
+No. It fetches the URLs you pass. To cover a site, collect its URLs first and load them as an array.
+
+### How do I give a LangChain.js agent access to web pages?
+
+Pass `new SpicrawlScrapeTool()` in the agent's `tools`, as in [Agent tool](#agent-tool). To give an
+agent all 24 `spicrawl_*` tools (batch jobs, sessions, usage and more), connect it to the hosted
+Spicrawl MCP server instead; see [Agent frameworks](https://docs.spicrawl.com/agents/frameworks).
+
+### What happens when a page is blocked or the site returns an error?
+
+A site that answers 4xx or 5xx throws a `SpicrawlError` with `code === "TARGET_STATUS"`. Pass
+`continueOnFailure: true` to log a warning and skip that URL. `createAgent` hands a tool error back
+to the model instead of crashing the run. Failed requests cost 0 credits.
+
+### Do I need an API key, and what does it cost?
+
+Yes: create a key in the [Spicrawl dashboard](https://app.spicrawl.com/dashboard/keys). Credits are
+charged only for successful requests; see [Credits](https://docs.spicrawl.com/credits).
+
+### Is there a Python version?
+
+Yes: [`langchain-spicrawl`](https://github.com/OfficialSpicrawl/langchain-spicrawl), with the same
+classes and the same metadata keys.
+
+### What license is it under?
+
+MIT.
 
 ## Development
 
